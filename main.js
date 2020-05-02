@@ -12,7 +12,7 @@ var app = http.createServer(function(request,response){
     }
     response.writeHead(200);
     response.end(fs.readFileSync(__dirname + url));
-    // 프로그래밍적으로 사용자에게 전송할 데이터를 생성한다 
+    // 프로그래밍적으로 사용자에게 전송할 데이터를 생성
  
 });
 app.listen(3000);
