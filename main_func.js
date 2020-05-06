@@ -1,8 +1,9 @@
-var http = require("http");
-var fs = require("fs");
-var url = require("url"); // 모듈 url
+var http = require("http"); // 로컬 서버와의 연결
+var fs = require("fs"); // 파일 불러오기 
+var url = require("url"); // url에서 쿼리 스트링 가져오기
 
 function templateHTML(title, list, body) {
+    // 웹페이지를 생성할 html 함수 정의 
   return `
                 <!doctype html>
                 <html>
@@ -23,6 +24,7 @@ function templateHTML(title, list, body) {
 }
 
 function templateList(filelist) {
+    // 동적으로 filelist를 불러올 함수 정의 
   var list = "<ul>";
   var i = 0;
   while (i < filelist.length) {
@@ -34,13 +36,14 @@ function templateList(filelist) {
 }
 
 var app = http.createServer(function (request, response) {
+    // http 모듈의 createServer 함수를 사용하여 서버 생성
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
-  var pathName = url.parse(_url, true).pathname;
+  var pathName = url.parse(_url, true).pathname; // 경로 
 
   if (pathName === "/") {
     if (queryData.id === undefined) {
-      // home 설정
+      // home main 설정
 
       fs.readdir("./data", function (err, filelist) {
         var title = "Welcome";
@@ -52,6 +55,7 @@ var app = http.createServer(function (request, response) {
         response.end(template);
       });
     } else {
+        // 각각의 id 값에 따른 ul 화면 설정
       fs.readdir("./data", function (err, filelist) {
         fs.readFile(`data/${queryData.id}`, "utf8", function (err, desc) {
           var title = queryData.id;
@@ -64,8 +68,8 @@ var app = http.createServer(function (request, response) {
     }
   } else {
     response.writeHead(404);
-    response.end("Not found");
+    response.end("Not found"); // 404 error 설정
   }
 });
 
-app.listen(3000);
+app.listen(3000); // 3000번 포트로 접속
