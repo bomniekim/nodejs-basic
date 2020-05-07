@@ -9,7 +9,6 @@ function templateHTML(title, list, body) {
                 <html>
                 <head>
                   <title>WEB1 - ${title}</title>
-                  <title>WEB1 - ${title}</title>
                   <meta charset="utf-8">
                   </head>
                   <body>
