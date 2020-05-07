@@ -3,7 +3,7 @@ var fs = require("fs"); // 파일 불러오기
 var url = require("url"); // url에서 쿼리 스트링 가져오기
 var qs = require("querystring");
 
-function templateHTML(title, list, body) {
+function templateHTML(title, list, body, control) {
   // 웹페이지를 생성할 html 함수 정의
   return `
                 <!doctype html>
@@ -16,7 +16,7 @@ function templateHTML(title, list, body) {
                   <title>WEB1 - ${title}</title>
                   <h1><a href="/">WEB</a></h1>
                   ${list}
-                  <a href="/create">create</a>
+                  ${control} 
                   ${body}
                 </body>
                 </html>
@@ -52,8 +52,14 @@ var app = http.createServer(function (request, response) {
         var title = "Welcome";
         var desc = "Hello node.js";
         var list = templateList(filelist);
-        var template = templateHTML(title, list, `<h2>${title}</h2>${desc}`);
-    
+        var template = templateHTML(
+          title,
+          list,
+          `<h2>${title}</h2>${desc}`,
+          `<a href="/create">create</a>`
+          // main에서는 update X
+        );
+
         response.writeHead(200);
         response.end(template);
       });
@@ -63,7 +69,12 @@ var app = http.createServer(function (request, response) {
         fs.readFile(`data/${queryData.id}`, "utf8", function (err, desc) {
           var title = queryData.id;
           var list = templateList(filelist);
-          var template = templateHTML(title, list, `<h2>${title}</h2>${desc}`);
+          var template = templateHTML(
+            title,
+            list,
+            `<h2>${title}</h2>${desc}`,
+            `<a href="/create">create</a> <a href="/update?id=${title}">update</a>` // control
+          );
           response.writeHead(200);
           response.end(template);
         });
@@ -77,37 +88,80 @@ var app = http.createServer(function (request, response) {
         title,
         list,
         `
-        <form action="http://localhost:3000/create_process" method="post">
+        <form action="/create_process" method="post">
         <p><input type="text" name="title" placeholder="title"></p>
         <p><textarea name="desc" placeholder="description"></textarea></p>
         <p><input type="submit"></p>
         </form>
         
-      `
+      `,
+        ""
       );
       response.writeHead(200);
       response.end(template);
     });
-  } else if(pathName === "/create_process"){
+  } else if (pathName === "/create_process") {
     // 포스트 방식으로 전송된 데이터 추출하기
-    var body = '';
-    request.on('data', function(data){
-        body = body + data;
-        // 콜백이 실행될 때마다 body에 data를 추가
-
+    var body = "";
+    request.on("data", function (data) {
+      body = body + data;
+      // 콜백이 실행될 때마다 body에 data를 추가
     });
-    request.on('end', function(){
-        // 정보 수신이 끝났을 때 실행되는 콜백 
-        var post = qs.parse(body); // post로 저장된 데이터
-        var title = post.title;
-        var desc = post.desc;
-        // form으로 입력받은 데이터로 파일 생성하기
-        fs.writeFile(`data/${title}`, desc, 'utf8', function(err){
-            response.writeHead(302, {Location: `/?id=${title}`}); // page redirection
-            response.end('success');
-        })
+    request.on("end", function () {
+      // 정보 수신이 끝났을 때 실행되는 콜백
+      var post = qs.parse(body); // post로 저장된 데이터
+      var title = post.title;
+      var desc = post.desc;
+      // form으로 입력받은 데이터로 파일 생성하기
+      fs.writeFile(`data/${title}`, desc, "utf8", function (err) {
+        response.writeHead(302, { Location: `/?id=${title}` }); // page redirection
+        response.end("success");
+      });
     });
-
+  } else if (pathName === "/update") {
+    fs.readdir("./data", function (err, filelist) {
+      fs.readFile(`data/${queryData.id}`, "utf8", function (err, desc) {
+        var title = queryData.id;
+        var list = templateList(filelist);
+        var template = templateHTML(
+          title,
+          list,
+          `
+                  <form action="/update_process" method="post">
+                  <input type="hidden" name="id" value="${title}">
+                  <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                  <p>
+                  <textarea name="desc" placeholder="description">${desc}</textarea>
+                  </p>
+                  <p><input type="submit"></p>
+                  </form>`,
+          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+        );
+        response.writeHead(200);
+        response.end(template);
+        // 수정할 파일의 이름과 원래 파일의 이름을 구별하기 위해서 hidden field 사용
+        // 아래와 같이 코딩 시 변경될 title과 원래 title인 id="${title}"의 정보를 숨겨서 전송
+      });
+    });
+  } else if (pathName === "/update_process") {
+    var body = "";
+    request.on("data", function (data) {
+      body = body + data;
+      // 콜백이 실행될 때마다 body에 data를 추가
+    });
+    request.on("end", function () {
+      // 정보 수신이 끝났을 때 실행되는 콜백
+      var post = qs.parse(body); // post로 저장된 데이터
+      var id = post.id;
+      var title = post.title;
+      var desc = post.desc;
+      fs.rename(`data/${id}`, `data/${title}`, function (err) {
+        fs.writeFile(`data/${title}`, desc, "utf8", function (err) {
+          response.writeHead(302, { Location: `/?id=${title}` }); // page redirection
+          response.end();
+        }); // old path, new path, callbackFunc
+      });
+    });
   } else {
     response.writeHead(404);
     response.end("Not found"); // 404 error 설정
