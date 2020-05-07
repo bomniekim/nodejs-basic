@@ -1,0 +1,13 @@
+<!-- form : 쿼리 스트링의 형태로 데이터를 전송하는 html의 기능 -->
+<form action="http://localhost:3000/process_create" method="post">
+    <!-- form 안의 정보를 위의 주소(action 속성)로 전송 -->
+    <p><input type="text" name="title"></p>
+    <p><textarea name="desc"></textarea></p>
+    <p><input type="submit"></p>
+</form>
+
+<!-- get 방식일 때 입력/전송 후 주소: http://localhost:3000/process_create?title=hi&desc=contents -->
+<!-- post 방식을 사용했을 때의 주소 : http://localhost:3000/process_create -->
+
+<!-- 서버로부터 사용자가 데이터를 가져올 때는 get -->
+<!-- 서버에 데이터 수정/생성/삭제를 할 때는 정보 은닉이 필요하므로 post--> -->
