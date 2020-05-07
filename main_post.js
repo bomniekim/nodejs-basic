@@ -167,5 +167,4 @@ var app = http.createServer(function (request, response) {
     response.end("Not found"); // 404 error 설정
   }
 });
-// g
 app.listen(3000); // 3000번 포트로 접속
