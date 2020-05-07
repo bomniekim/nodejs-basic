@@ -1,9 +1,9 @@
 var http = require("http"); // 로컬 서버와의 연결
-var fs = require("fs"); // 파일 불러오기 
+var fs = require("fs"); // 파일 불러오기
 var url = require("url"); // url에서 쿼리 스트링 가져오기
 
 function templateHTML(title, list, body) {
-    // 웹페이지를 생성할 html 함수 정의 
+  // 웹페이지를 생성할 html 함수 정의
   return `
                 <!doctype html>
                 <html>
@@ -15,6 +15,7 @@ function templateHTML(title, list, body) {
                   <title>WEB1 - ${title}</title>
                   <h1><a href="/">WEB</a></h1>
                   ${list}
+                  <a href="/create">create</a>
                   ${body}
                 </body>
                 </html>
@@ -23,7 +24,7 @@ function templateHTML(title, list, body) {
 }
 
 function templateList(filelist) {
-    // 동적으로 filelist를 불러올 함수 정의 
+  // 동적으로 filelist를 불러올 함수 정의
   var list = "<ul>";
   var i = 0;
   while (i < filelist.length) {
@@ -35,10 +36,10 @@ function templateList(filelist) {
 }
 
 var app = http.createServer(function (request, response) {
-    // http 모듈의 createServer 함수를 사용하여 서버 생성
+  // http 모듈의 createServer 함수를 사용하여 서버 생성
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
-  var pathName = url.parse(_url, true).pathname; // 경로 
+  var pathName = url.parse(_url, true).pathname; // 경로
 
   if (pathName === "/") {
     if (queryData.id === undefined) {
@@ -54,7 +55,7 @@ var app = http.createServer(function (request, response) {
         response.end(template);
       });
     } else {
-        // 각각의 id 값에 따른 ul 화면 설정
+      // 각각의 id 값에 따른 ul 화면 설정
       fs.readdir("./data", function (err, filelist) {
         fs.readFile(`data/${queryData.id}`, "utf8", function (err, desc) {
           var title = queryData.id;
@@ -65,6 +66,25 @@ var app = http.createServer(function (request, response) {
         });
       });
     }
+  } else if (pathName === "/create") {
+    fs.readdir("./data", function (err, filelist) {
+      var title = "WEB - create";
+      var list = templateList(filelist);
+      var template = templateHTML(
+        title,
+        list,
+        `
+        <form action="http://localhost:3000/process_create" method="post">
+        <p><input type="text" name="title" placeholder="title"></p>
+        <p><textarea name="desc" placeholder="description"></textarea></p>
+        <p><input type="submit"></p>
+        </form>
+        
+      `
+      );
+      response.writeHead(200);
+      response.end(template);
+    });
   } else {
     response.writeHead(404);
     response.end("Not found"); // 404 error 설정
